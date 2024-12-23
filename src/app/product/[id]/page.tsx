@@ -1,10 +1,15 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, ShoppingCart, ChevronLeft, Star, Check, X } from 'lucide-react';
+import { Heart, ShoppingCart, ChevronLeft, Star, X } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
+import { fetchProductData } from '@/app/utils/api';
+import Loading from '@/app/components/reusable/loading';
+import Error from '@/app/components/reusable/error';
+
 
 interface Product {
   id: number;
@@ -13,6 +18,7 @@ interface Product {
   category: string;
   description: string;
   image: string;
+  message:string;
   rating: {
     rate: number;
     count: number;
@@ -23,22 +29,6 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'success' | 'error';
-}
-
-const Toast = ({ message, type, onClose }: { message: string; type: string; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg 
-    ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white min-w-[300px] z-50`}>
-    <span className="flex-1">{message}</span>
-    <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
-      <X className="w-4 h-4" />
-    </button>
-  </div>
-);
-
 export default function ProductDetailPage() {
   const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
@@ -47,12 +37,6 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isInCart, setIsInCart] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ id: Date.now(), message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   useEffect(() => {
     const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -61,20 +45,21 @@ export default function ProductDetailPage() {
     const wishlistItems = JSON.parse(localStorage.getItem('wishlist') || '[]');
     setIsInWishlist(wishlistItems.some((item: Product) => item.id === Number(params.id)));
 
-    const fetchProduct = async () => {
+    const loadProduct = async () => {
       try {
-        const response = await fetch(`https://fakestoreapi.com/products/${params.id}`);
-        if (!response.ok) throw new Error('Failed to fetch product');
-        const data = await response.json();
+        const data = await fetchProductData(Number(params.id));
         setProduct(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+         if(err instanceof Error)
+                    console.log(err);
+
+
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.id) fetchProduct();
+    if (params.id) loadProduct();
   }, [params.id]);
 
   const handleAddToCart = () => {
@@ -85,10 +70,10 @@ export default function ProductDetailPage() {
 
     if (existingItemIndex >= 0) {
       cartItems[existingItemIndex].quantity += quantity;
-      showToast(`Updated ${product.title} quantity in cart`, 'success');
+      toast.success(`Updated ${product.title} quantity in cart`);
     } else {
       cartItems.push({ ...product, quantity });
-      showToast(`Added ${product.title} to cart`, 'success');
+      toast.success(`Added ${product.title} to cart`);
     }
 
     localStorage.setItem('cart', JSON.stringify(cartItems));
@@ -105,45 +90,29 @@ export default function ProductDetailPage() {
       const updatedWishlist = wishlistItems.filter(item => item.id !== product.id);
       localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
       setIsInWishlist(false);
-      showToast(`Removed ${product.title} from wishlist`, 'success');
+      toast.success(`Removed ${product.title} from wishlist`);
     } else {
       wishlistItems.push(product);
       localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
       setIsInWishlist(true);
-      showToast(`Added ${product.title} to wishlist`, 'success');
+      toast.success(`Added ${product.title} to wishlist`);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-64 bg-gray-200 rounded"></div>
-          <div className="h-8 w-48 bg-gray-200 rounded"></div>
-          <div className="h-8 w-56 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+      <Loading></Loading>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500 text-xl">{error || 'Product not found'}</div>
-      </div>
+        <Error message={error} />
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-      
       <div className="container mx-auto px-4 py-8">
         <Link
           href="/product"
@@ -160,7 +129,6 @@ export default function ProductDetailPage() {
                 src={product.image}
                 alt={product.title}
                 fill
-        
                 className="max-h-[400px] max-w-full object-contain"
               />
             </div>
@@ -175,11 +143,7 @@ export default function ProductDetailPage() {
                 </div>
                 <button
                   onClick={handleToggleWishlist}
-                  className={`p-3 rounded-full transition-all ${
-                    isInWishlist 
-                      ? 'bg-red-50 text-red-500 hover:bg-red-100' 
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}
+                  className={`p-3 rounded-full transition-all ${isInWishlist ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
                   <Heart className="w-6 h-6" fill={isInWishlist ? 'currentColor' : 'none'} />
                 </button>
@@ -196,40 +160,24 @@ export default function ProductDetailPage() {
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-600">
-                  ({product.rating.count} reviews)
-                </span>
+                <span className="text-sm text-gray-600">({product.rating.count} reviews)</span>
               </div>
 
               <p className="mt-6 text-gray-600 leading-relaxed">{product.description}</p>
 
               <div className="mt-auto pt-8">
                 <div className="flex items-center justify-between mb-6">
-                  <span className="text-3xl font-bold text-green-600">
-                    ${product.price.toFixed(2)}
-                  </span>
+                  <span className="text-3xl font-bold text-green-600">${product.price.toFixed(2)}</span>
                   <div className="flex items-center border rounded-lg bg-white">
-                    <button
-                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                      -
-                    </button>
+                    <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
                     <span className="w-12 text-center border-x py-2">{quantity}</span>
-                    <button
-                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                      onClick={() => setQuantity(quantity + 1)}
-                    >
-                      +
-                    </button>
+                    <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" onClick={() => setQuantity(quantity + 1)}>+</button>
                   </div>
                 </div>
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-8 rounded-lg 
-                    bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all
-                    hover:shadow-lg active:transform active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all hover:shadow-lg active:transform active:scale-[0.98]"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Add to Cart
