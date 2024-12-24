@@ -21,4 +21,15 @@ export const fetchProductData = async (id: number) => {
     }
   };
 
-  
+  // export const getData = async (endpoint: string) => {
+  //   try {
+  //     const res = await fetch(`${BASE_URL}/products/${id}`);
+  //     if (!res.ok) throw new Error('Failed to fetch product');
+  //     const data = await res.json();
+  //     return data;
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : 'Something went wrong!');
+  //   }
+  // };
+
+

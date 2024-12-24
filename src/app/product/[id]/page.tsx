@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { Heart, ShoppingCart, ChevronLeft, Star, X } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { fetchProductData } from '@/app/utils/api';
+
 import Loading from '@/app/components/reusable/loading';
 import Error from '@/app/components/reusable/error';
+import { getSingleProduct } from '@/app/utils/http-client.service';
 
 
 interface Product {
@@ -47,7 +48,7 @@ export default function ProductDetailPage() {
 
     const loadProduct = async () => {
       try {
-        const data = await fetchProductData(Number(params.id));
+        const data = await getSingleProduct(String(params.id));
         setProduct(data);
       } catch (err) {
          if(err instanceof Error)

@@ -1,10 +1,12 @@
 'use client';
 
-import { fetchProducts } from '@/app/utils/api';
+
 import { useEffect, useState } from 'react';
 import Loading from '../components/reusable/loading';
 import Error from '../components/reusable/error';
 import ProductCard, { Product } from '../components/reusable/ProductCard';
+import { getData } from '../utils/http-client.service';
+import { PRODUCTS } from '../utils/endpoints';
 
 
 
@@ -17,7 +19,7 @@ export default function ProductPage() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await fetchProducts();
+        const data = await getData(PRODUCTS);
         setProducts(data);
       } catch (err) {
         // setError(err instanceof Error ? err?.message : 'An error occurred');
