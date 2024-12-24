@@ -1,16 +1,10 @@
 'use client';
 
+import { Product } from '@/app/models/product.model';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export  interface Product {
-  id: number;
-  title: string;
-  price: number;
-  category: string;
-  description: string;
-  image: string;
-}
+
 
 export default function ProductCard({ product }: { product: Product }) {
   return (

@@ -10,23 +10,10 @@ import toast from 'react-hot-toast';
 import Loading from '@/app/components/reusable/loading';
 import Error from '@/app/components/reusable/error';
 import { getSingleProduct } from '@/app/utils/http-client.service';
+import { Product } from '@/app/models/product.model';
 
 
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  category: string;
-  description: string;
-  image: string;
-  message:string;
-  rating: {
-    rate: number;
-    count: number;
-  };
-}
-
-interface CartItem extends Product {
+interface CartItem extends Product{
   quantity: number;
 }
 
@@ -178,7 +165,7 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all hover:shadow-lg active:transform active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-8 rounded-lg bg-sky-500 hover:bg-sky-700 text-white font-semibold transition-all hover:shadow-lg active:transform active:scale-[0.98]"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Add to Cart

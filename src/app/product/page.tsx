@@ -4,9 +4,10 @@
 import { useEffect, useState } from 'react';
 import Loading from '../components/reusable/loading';
 import Error from '../components/reusable/error';
-import ProductCard, { Product } from '../components/reusable/ProductCard';
+import ProductCard from '../components/reusable/ProductCard';
 import { getData } from '../utils/http-client.service';
 import { PRODUCTS } from '../utils/endpoints';
+import { Product } from '../models/product.model';
 
 
 
